@@ -1,0 +1,32 @@
+<?php
+
+/**
+ * @file
+ * Default rule configurations for Cart.
+ */
+
+/**
+ * Implements hook_default_rules_configuration().
+ */
+function commerce_price_table_default_rules_configuration() {
+  $rules = array();
+
+  // Add a reaction rule to update a shopping cart order's status to "Shopping
+  // cart" when a product is added to or removed from the order.
+  $rule = rules_reaction_rule();
+
+  $rule->label = t('Override price with price table');
+  $rule->active = TRUE;
+
+  $rule
+    ->event('commerce_product_calculate_sell_price')
+    ->action('commerce_price_table_set_price', array(
+      'line_item:select' => 'line-item',
+    ));
+
+  $rule->weight = -10;
+
+  $rules['commerce_price_table_override_price'] = $rule;
+
+  return $rules;
+}
