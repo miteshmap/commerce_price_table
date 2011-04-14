@@ -391,10 +391,14 @@ function commerce_price_table_sort_by_qty($a, $b) {
  * Return the settings of all the price table field of a bundle.
  */
 function commerce_price_table_get_field_instance_settings($entity_type = 'commerce_product', $bundle = 'product') {
+  $settings = array();
   $fields = commerce_info_fields('commerce_price_table', $entity_type);
-  foreach ($fields as $field) {
-    $settings[] = field_info_instance($entity_type, $field['field_name'], $bundle);
+  if (isset($fields) && is_array($fields)) {
+    foreach ($fields as $field) {
+      $settings[] = field_info_instance($entity_type, $field['field_name'], $bundle);
+    }
   }
+
   return $settings;
 }
 
