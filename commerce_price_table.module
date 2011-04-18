@@ -47,6 +47,8 @@ function commerce_price_table_field_formatter_info() {
       'field types' => array('commerce_price_table'),
       'settings' => array(
         'calculation' => FALSE,
+        'price_label' => t('Price'),
+        'quantity_label' => t('Quantity'),
       ),
     ),
   );
@@ -193,7 +195,7 @@ function commerce_price_table_field_validate($entity_type, $entity, $field, $ins
       );
     }
 
-    // @TODO Add extra validations, such no repeating qty and always force to have quantity for 1?.
+    // @TODO Add extra validations, as no repeating qty and always force to have quantity for 1?.
   }
 }
 
@@ -233,8 +235,52 @@ function commerce_price_table_field_instance_settings_form($field, $instance) {
     '#description' => t('Activate this checkbox to hide the default price and display the price table instead.'),
     '#default_value' => isset($settings['hide_default_price']) ? $settings['hide_default_price'] : NULL,
   );
-  return $form;
 }
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function commerce_price_table_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $element = array();
+
+  if ($display['type'] == 'commerce_multiprice_default') {
+    $element['price_label'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Price label for the price table'),
+      '#default_value' => isset($settings['price_label']) ? $settings['price_label'] : t('Price'),
+    );
+    $element['quantity_label'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Quantity label for the price table'),
+      '#default_value' => isset($settings['quantity_label']) ? $settings['quantity_label'] : t('Quantity'),
+    );
+  }
+  
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function commerce_price_table_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $summary = array();
+
+  if ($display['type'] == 'commerce_multiprice_default') {
+    $summary = array(
+      t('Quantity label: !quantity_label', array('!quantity_label' => isset($settings['quantity_label']) ? $settings['quantity_label'] : t('Quantity'))),
+      t('Price label: !price_label', array('!price_label' => isset($settings['price_label']) ? $settings['price_label'] : t('Price'))),
+    );
+  }
+
+  return implode('<br />', $summary);
+}
+
 
 /**
  * Defines info for the properties of the Price field data structure.
@@ -298,14 +344,11 @@ function commerce_price_table_field_formatter_view($entity_type, $entity, $field
   if ($display['type'] == 'commerce_multiprice_default') {
     //drupal_add_css(drupal_get_path('module', 'commerce_price_table') . '/theme/commerce_price_table.css');
 
-    $header = array(t('Quantity'));
-    $row = array(t('Price'));
+    $header = array(isset($display['settings']['quantity_label']) ? $display['settings']['quantity_label'] : t('Quantity'));
+    $row = array(isset($display['settings']['price_label']) ? $display['settings']['price_label'] : t('Price'));
     foreach ($items as $delta => $item) {
       if (isset($item['min_qty']) && $item['max_qty'] && $item['amount']) {
-        // Replace -1 for unlimited.
-        $quantity_text = $item['max_qty'] == -1 ? t('Unlimited') : $item['max_qty'];
-
-        $header[] = $item['min_qty'] . '-' . $quantity_text;
+        $header[] = commerce_price_table_display_quantity_headers($item);
 
         $line_item = commerce_product_line_item_new($entity, $item['min_qty']);
         $line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item);
@@ -346,6 +389,7 @@ function commerce_price_table_field_formatter_view($entity_type, $entity, $field
  * Get the price for the min qty possible in a product.
  */
 function commerce_price_table_get_amount_qty($product, $quantity = 1) {
+  $items = array();
   $product_wrapper = entity_metadata_wrapper('commerce_product', $product);
   $fields = commerce_info_fields('commerce_price_table', 'commerce_product');
   foreach ($fields as $field) {
@@ -439,4 +483,21 @@ function commerce_price_table_node_view_alter(&$build) {
     }
     $build['product:commerce_price']['#access'] = $access;
   }
+}
+
+/**
+ * Helper function that takes care of the quantity displayed in the headers of 
+ * the price table.
+ */
+function commerce_price_table_display_quantity_headers($item) {
+  // Set the quantity text to unlimited if it's -1.
+  $max_qty = $item['max_qty'] == -1 ? t('Unlimited') : $item['max_qty'];
+  // If max and min qtys are the same, only show one.
+  if ($item['min_qty'] == $max_qty) {
+    $quantity_text = $item['min_qty'];
+  }
+  else {
+    $quantity_text = $item['min_qty'] . ' - ' . $max_qty;
+  }
+  return $quantity_text;
 }

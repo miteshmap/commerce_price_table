@@ -27,7 +27,7 @@ function commerce_price_table_set_price($line_item) {
     $line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item);
     $product = commerce_product_load($line_item_wrapper->commerce_product->product_id->value());
     $item = commerce_price_table_get_amount_qty($product, $line_item_wrapper->quantity->value());
-    if (isset($item)) {
+    if (!empty($item)) {
       $line_item_wrapper->commerce_unit_price->amount = $item['amount'];
       $base_price = $line_item_wrapper->commerce_unit_price->data->value();
       $base_price['components'][0]['price']['amount'] = $item['amount'];
