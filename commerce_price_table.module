@@ -71,7 +71,7 @@ function commerce_price_table_field_widget_form(&$form, &$form_state, $field, $i
     $currency = commerce_currency_load($items[$delta]['currency_code']);
 
     // Round the default value.
-    $default_amount = round($items[$delta]['amount'], 2);
+    $default_amount = commerce_currency_amount_to_decimal($items[$delta]['amount'], $currency['code']);
 
     // Run it through number_format() to add the decimal places in if necessary.
     if (strpos($default_amount, '.') === FALSE || strpos($default_amount, '.') > strlen($default_amount) - $currency['decimals']) {
@@ -131,7 +131,7 @@ function commerce_price_table_field_presave($entity_type, $entity, $field, $inst
   // Convert amounts to integers and serialize data arrays before saving.
   foreach ($items as $delta => $item) {
     // Convert the price amount to an integer based on the currency.
-    $items[$delta]['amount'] = commerce_currency_amount_to_integer(
+    $items[$delta]['amount'] = commerce_currency_decimal_to_amount(
       $items[$delta]['amount'],
       $items[$delta]['currency_code']
     );
@@ -157,12 +157,6 @@ function commerce_price_table_field_load($entity_type, $entities, $field, $insta
   // Convert amounts to their floating point values and deserialize data arrays.
   foreach ($entities as $id => $entity) {
     foreach ($items[$id] as $delta => $item) {
-      // Convert the loaded amount integer to a price amount based on the currency.
-      $items[$id][$delta]['amount'] = commerce_currency_integer_to_amount(
-        $items[$id][$delta]['amount'],
-        $items[$id][$delta]['currency_code']
-      );
-
       // Unserialize the data array if necessary.
       if (!empty($items[$id][$delta]['data'])) {
         $items[$id][$delta]['data'] = unserialize($items[$id][$delta]['data']);
