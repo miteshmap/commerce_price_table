@@ -1,6 +1,6 @@
 name = Commerce price table
 description = Price table field for Commerce
-package = Commerce - Other
+package = Commerce (contrib)
 core = 7.x
 
 dependencies[] = commerce_product
