@@ -9,7 +9,7 @@ function commerce_price_table_rules_action_info() {
   $actions['commerce_price_table_set_price'] = array(
     'label' => t('Replace the price for a price table'),
     'parameter' => array(
-      'line_item' => array(
+      'commerce_line_item' => array(
         'type' => 'commerce_line_item',
         'label' => t('Line item'),
       ),

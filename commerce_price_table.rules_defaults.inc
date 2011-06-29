@@ -21,7 +21,7 @@ function commerce_price_table_default_rules_configuration() {
   $rule
     ->event('commerce_product_calculate_sell_price')
     ->action('commerce_price_table_set_price', array(
-      'line_item:select' => 'line-item',
+      'commerce_line_item:select' => 'commerce-line-item',
     ));
 
   $rule->weight = -10;
