@@ -223,12 +223,17 @@ function commerce_price_table_property_info_callback(&$info, $entity_type, $fiel
  */
 function commerce_price_table_field_instance_settings_form($field, $instance) {
   $settings = $instance['settings'];
-  $form['hide_default_price'] = array(
+  $form['commerce_price_table'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Commerce price table settings'),
+  );
+  $form['commerce_price_table']['hide_default_price'] = array(
     '#type' => 'checkbox',
     '#title' => t('Hide default price'),
     '#description' => t('Activate this checkbox to hide the default price and display the price table instead.'),
-    '#default_value' => isset($settings['hide_default_price']) ? $settings['hide_default_price'] : NULL,
+    '#default_value' => isset($settings['commerce_price_table']['hide_default_price']) ? $settings['commerce_price_table']['hide_default_price'] : NULL,
   );
+  return $form;
 }
 
 /**
@@ -387,7 +392,7 @@ function commerce_price_table_get_amount_qty($product, $quantity = 1) {
   $product_wrapper = entity_metadata_wrapper('commerce_product', $product);
   $fields = commerce_info_fields('commerce_price_table', 'commerce_product');
   foreach ($fields as $field) {
-    if (isset($product->{$field['field_name']})) {
+    if (!empty($product->{$field['field_name']})) {
       foreach ($product_wrapper->{$field['field_name']}->value() as $item) {
         $items[] = $item;
       }
@@ -446,7 +451,7 @@ function commerce_price_table_get_field_instance_settings($entity_type = 'commer
 function commerce_price_table_form_commerce_product_ui_product_form_alter(&$form, &$form_state, $form_id) {
   $access = TRUE;
   foreach (commerce_price_table_get_field_instance_settings($form['#entity_type'], $form['#bundle']) as $setting) {
-    if ($setting['settings']['hide_default_price']) {
+    if (isset($setting['settings']['commerce_price_table']['hide_default_price']) && $setting['settings']['commerce_price_table']['hide_default_price'] == TRUE) {
       $access = FALSE;
     }
   }
@@ -471,7 +476,7 @@ function commerce_price_table_node_view_alter(&$build) {
   if ($found_product_reference) {
     $access = TRUE;
     foreach (commerce_price_table_get_field_instance_settings() as $setting) {
-      if ($setting['settings']['hide_default_price']) {
+      if (isset($setting['settings']['commerce_price_table']['hide_default_price']) && $setting['settings']['commerce_price_table']['hide_default_price'] == TRUE) {
         $access = FALSE;
       }
     }
