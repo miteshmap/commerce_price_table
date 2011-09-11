@@ -89,11 +89,11 @@ function commerce_price_table_field_widget_form(&$form, &$form_state, $field, $i
 
   $element['#attached']['css'][] = drupal_get_path('module', 'commerce_price_table') . '/theme/commerce_price_table.css';
 
-  // @TODO Add a description for the quantity fields.
   if ($instance['widget']['type'] == 'commerce_price_table_multiple') {
     $element['amount'] = array(
       '#type' => 'textfield',
       '#title' => $element['#title'],
+      '#description' => t('Amount for the price.'),
       '#default_value' => $default_amount,
       '#size' => 10,
       '#field_suffix' => $default_currency['code'],
@@ -105,12 +105,14 @@ function commerce_price_table_field_widget_form(&$form, &$form_state, $field, $i
     $element['min_qty'] = array(
       '#type' => 'textfield',
       '#title' => t('Min Qty'),
+      '#description' => t('Minimum quantity for the price range.'),
       '#default_value' => isset($items[$delta]['min_qty']) ? $items[$delta]['min_qty'] : 0,
       '#size' => 10,
     );
     $element['max_qty'] = array(
       '#type' => 'textfield',
       '#title' => t('Max Qty'),
+      '#description' => t('Maximum quantity for the price range. Use "-1" for unlimited quantity.'),
       '#default_value' => isset($items[$delta]['max_qty']) ? $items[$delta]['max_qty'] : 0,
       '#size' => 10,
     );
@@ -341,7 +343,6 @@ function commerce_price_table_theme() {
  */
 function commerce_price_table_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   if ($display['type'] == 'commerce_multiprice_default') {
-    //drupal_add_css(drupal_get_path('module', 'commerce_price_table') . '/theme/commerce_price_table.css');
 
     $header = array(isset($display['settings']['quantity_label']) ? $display['settings']['quantity_label'] : t('Quantity'));
     $row = array(isset($display['settings']['price_label']) ? $display['settings']['price_label'] : t('Price'));
