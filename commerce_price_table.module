@@ -123,7 +123,26 @@ function commerce_price_table_field_widget_form(&$form, &$form_state, $field, $i
     '#default_value' => !empty($items[$delta]['data']) ? $items[$delta]['data'] : array('components' => array()),
   );
 
+  $element['#element_validate'][] = 'commerce_price_table_field_widget_validate';
+
   return $element;
+}
+
+/**
+ * Validate callback: ensures the amount value is numeric and converts it from a
+ * decimal value to an integer price amount.
+ */
+function commerce_price_table_field_widget_validate($element, &$form_state) {
+  if ($element['amount']['#value'] !== '') {
+    // Ensure the price is numeric.
+    if (!is_numeric($element['amount']['#value'])) {
+      form_error($element['amount'], t('%title: you must enter a numeric value for the price amount.', array('%title' => $element['amount']['#title'])));
+    }
+    else {
+      // Convert the decimal amount value entered to an integer based amount value.
+      form_set_value($element['amount'], commerce_currency_decimal_to_amount($element['amount']['#value'], $element['currency_code']['#value']), $form_state);
+    }
+  }
 }
 
 /**
@@ -132,12 +151,6 @@ function commerce_price_table_field_widget_form(&$form, &$form_state, $field, $i
 function commerce_price_table_field_presave($entity_type, $entity, $field, $instance, $langcode, &$items) {
   // Convert amounts to integers and serialize data arrays before saving.
   foreach ($items as $delta => $item) {
-    // Convert the price amount to an integer based on the currency.
-    $items[$delta]['amount'] = commerce_currency_decimal_to_amount(
-      $items[$delta]['amount'],
-      $items[$delta]['currency_code']
-    );
-
     // Serialize an existing data array.
     if (isset($item['data']) && is_array($item['data'])) {
       $items[$delta]['data'] = serialize($item['data']);
@@ -199,7 +212,7 @@ function commerce_price_table_field_validate($entity_type, $entity, $field, $ins
  * Implementation of hook_field_is_empty().
  */
 function commerce_price_table_field_is_empty($item, $field) {
-  return !isset($item['amount']) || (string) $item['amount'] == '';
+  return!isset($item['amount']) || (string) $item['amount'] == '';
 }
 
 /**
@@ -259,7 +272,7 @@ function commerce_price_table_field_formatter_settings_form($field, $instance, $
       '#default_value' => isset($settings['quantity_label']) ? $settings['quantity_label'] : t('Quantity'),
     );
   }
-  
+
   return $element;
 }
 
@@ -281,7 +294,6 @@ function commerce_price_table_field_formatter_settings_summary($field, $instance
 
   return implode('<br />', $summary);
 }
-
 
 /**
  * Defines info for the properties of the Price field data structure.
@@ -359,15 +371,15 @@ function commerce_price_table_field_formatter_view($entity_type, $entity, $field
         $price = array(
           'amount' => $item['amount'],
           'currency_code' => $item['currency_code'],
-        	'data' => array(),
+          'data' => array(),
         );
 
         // Alter the base price to the current one.
         $line_item_wrapper->commerce_unit_price->data = commerce_price_component_add(
-          $line_item_wrapper->commerce_unit_price->value(),
-          'base_price',
-         	$price,
-          TRUE
+                $line_item_wrapper->commerce_unit_price->value(),
+                'base_price',
+                $price,
+                TRUE
         );
 
         // Invoke the calculation rule event.
@@ -476,7 +488,7 @@ function commerce_price_table_node_view_alter(&$build) {
   // enabled.
   if ($found_product_reference) {
     $access = TRUE;
-    foreach (commerce_price_table_get_field_instance_settings() as $setting) {
+    foreach (commerce_price_table_get_field_instance_settings () as $setting) {
       if (isset($setting['settings']['commerce_price_table']['hide_default_price']) && $setting['settings']['commerce_price_table']['hide_default_price'] == TRUE) {
         $access = FALSE;
       }
