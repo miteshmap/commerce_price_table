@@ -354,45 +354,48 @@ function commerce_price_table_theme() {
  * Implements hook_field_formatter_view().
  */
 function commerce_price_table_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-  if ($display['type'] == 'commerce_multiprice_default') {
+  $element = array();
 
+  if ($display['type'] == 'commerce_multiprice_default') {
     $header = array(isset($display['settings']['quantity_label']) ? $display['settings']['quantity_label'] : t('Quantity'));
     $row = array(isset($display['settings']['price_label']) ? $display['settings']['price_label'] : t('Price'));
-    foreach ($items as $delta => $item) {
-      if (isset($item['min_qty']) && $item['max_qty'] && $item['amount']) {
-        $header[] = commerce_price_table_display_quantity_headers($item);
 
-        $line_item = commerce_product_line_item_new($entity, $item['min_qty']);
-        $line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item);
-        $line_item_wrapper->commerce_unit_price->amount = $item['amount'];
+    if (!empty($items)) {
+      foreach ($items as $delta => $item) {
+        if (isset($item['min_qty']) && $item['max_qty'] && $item['amount']) {
+          $header[] = commerce_price_table_display_quantity_headers($item);
 
-        // Empty the price components to recalculate them.
-        $line_item->commerce_unit_price[LANGUAGE_NONE][0]['data']['components'] = array();
-        $price = array(
-          'amount' => $item['amount'],
-          'currency_code' => $item['currency_code'],
-          'data' => array(),
-        );
+          $line_item = commerce_product_line_item_new($entity, $item['min_qty']);
+          $line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item);
+          $line_item_wrapper->commerce_unit_price->amount = $item['amount'];
 
-        // Alter the base price to the current one.
-        $line_item_wrapper->commerce_unit_price->data = commerce_price_component_add(
-                $line_item_wrapper->commerce_unit_price->value(),
-                'base_price',
-                $price,
-                TRUE
-        );
+          // Empty the price components to recalculate them.
+          $line_item->commerce_unit_price[LANGUAGE_NONE][0]['data']['components'] = array();
+          $price = array(
+            'amount' => $item['amount'],
+            'currency_code' => $item['currency_code'],
+            'data' => array(),
+          );
 
-        // Invoke the calculation rule event.
-        rules_invoke_event('commerce_product_calculate_sell_price', $line_item);
+          // Alter the base price to the current one.
+          $line_item_wrapper->commerce_unit_price->data = commerce_price_component_add(
+                  $line_item_wrapper->commerce_unit_price->value(),
+                  'base_price',
+                  $price,
+                  TRUE
+          );
 
-        $row[] = array('data' => commerce_currency_format($line_item_wrapper->commerce_unit_price->amount->value(), $line_item_wrapper->commerce_unit_price->currency_code->value(), $entity));
+          // Invoke the calculation rule event.
+          rules_invoke_event('commerce_product_calculate_sell_price', $line_item);
+
+          $row[] = array('data' => commerce_currency_format($line_item_wrapper->commerce_unit_price->amount->value(), $line_item_wrapper->commerce_unit_price->currency_code->value(), $entity));
+        }
       }
+      $element[] = array(
+        '#markup' => theme('table', array('header' => $header, 'rows' => array($row))),
+      );
     }
   }
-
-  $element[] = array(
-    '#markup' => theme('table', array('header' => $header, 'rows' => array($row))),
-  );
 
   return $element;
 }
