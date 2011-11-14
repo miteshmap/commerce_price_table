@@ -356,11 +356,10 @@ function commerce_price_table_theme() {
 function commerce_price_table_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
   $element = array();
 
-  if ($display['type'] == 'commerce_multiprice_default') {
+  if ($display['type'] == 'commerce_multiprice_default' && !empty($items)) {
     $header = array(isset($display['settings']['quantity_label']) ? $display['settings']['quantity_label'] : t('Quantity'));
     $row = array(isset($display['settings']['price_label']) ? $display['settings']['price_label'] : t('Price'));
-
-    if (!empty($items)) {
+    if ($entity_type == 'commerce_product') {
       foreach ($items as $delta => $item) {
         if (isset($item['min_qty']) && $item['max_qty'] && $item['amount']) {
           $header[] = commerce_price_table_display_quantity_headers($item);
@@ -391,10 +390,19 @@ function commerce_price_table_field_formatter_view($entity_type, $entity, $field
           $row[] = array('data' => commerce_currency_format($line_item_wrapper->commerce_unit_price->amount->value(), $line_item_wrapper->commerce_unit_price->currency_code->value(), $entity));
         }
       }
-      $element[] = array(
-        '#markup' => theme('table', array('header' => $header, 'rows' => array($row))),
-      );
     }
+    else {
+      // Not a product. We're dealing with exotic stuff here.
+      foreach ($items as $delta => $item) {
+        if (isset($item['min_qty']) && $item['max_qty'] && $item['amount']) {
+          $header[] = commerce_price_table_display_quantity_headers($item);
+          $row[] = array('data' => commerce_currency_format($item['amount'], $item['currency_code'], $entity));
+        }
+      }
+    }
+    $element[] = array(
+      '#markup' => theme('table', array('header' => $header, 'rows' => array($row))),
+    );
   }
 
   return $element;
@@ -475,12 +483,12 @@ function commerce_price_table_form_commerce_product_ui_product_form_alter(&$form
 }
 
 /**
- * Implements hook_node_view_alter().
+ * Implements hook_entity_view_alter().
  */
-function commerce_price_table_node_view_alter(&$build) {
+function commerce_price_table_entity_view_alter(&$build, $type) {
   // Check if there is a product reference field in the node.
   $found_product_reference = FALSE;
-  $fields = commerce_info_fields('commerce_product_reference', $build['#entity_type']);
+  $fields = commerce_info_fields('commerce_product_reference', $type);
   foreach ($fields as $field) {
     if (isset($build[$field['field_name']])) {
       $found_product_reference = TRUE;
@@ -489,9 +497,9 @@ function commerce_price_table_node_view_alter(&$build) {
 
   // If there is one, we check if the setting for hiding the default price is
   // enabled.
-  if ($found_product_reference) {
+  if ($found_product_reference || !empty($build['product:commerce_price'])) {
     $access = TRUE;
-    foreach (commerce_price_table_get_field_instance_settings () as $setting) {
+    foreach (commerce_price_table_get_field_instance_settings($type, $build['#bundle']) as $setting) {
       if (isset($setting['settings']['commerce_price_table']['hide_default_price']) && $setting['settings']['commerce_price_table']['hide_default_price'] == TRUE) {
         $access = FALSE;
       }
