@@ -196,7 +196,6 @@ function commerce_price_table_field_validate($entity_type, $entity, $field, $ins
       );
     }
 
-    // @TODO this is not displaying the message but the error id.
     if ($item['max_qty'] < $item['min_qty'] && $item['max_qty'] <> -1) {
       $errors[$field['field_name']][$langcode][$delta][] = array(
         'error' => 'price_table_quantity',
@@ -205,6 +204,18 @@ function commerce_price_table_field_validate($entity_type, $entity, $field, $ins
     }
 
     // @TODO Add extra validations, as no repeating qty and always force to have quantity for 1?.
+  }
+}
+
+/**
+ * Implements hook_field_widget_error().
+ */
+function commerce_price_table_field_widget_error($element, $error, $form, &$form_state) {
+  switch ($error['error']) {
+    case 'price_numeric':
+    case 'price_table_quantity':
+      form_error($element, $error['message']);
+      break;
   }
 }
 
