@@ -11,7 +11,7 @@ function commerce_price_table_field_info() {
   return array(
     'commerce_price_table' => array(
       'label' => t('Price table'),
-      'description' => t('This field stores multiple prices for products based ib the quantity selected.'),
+      'description' => t('This field stores multiple prices for products based on the quantity selected.'),
       'settings' => array(),
       'instance_settings' => array(),
       'default_widget' => 'commerce_price_table_multiple',
