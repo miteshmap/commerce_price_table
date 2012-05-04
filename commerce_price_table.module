@@ -4,6 +4,9 @@
  * @file
  */
 
+define('COMMERCE_PRICE_TABLE_HORIZONTAL', 0);
+define('COMMERCE_PRICE_TABLE_VERTICAL', 1);
+
 /**
  * Implements hook_field_info().
  */
@@ -49,6 +52,7 @@ function commerce_price_table_field_formatter_info() {
         'calculation' => FALSE,
         'price_label' => t('Price'),
         'quantity_label' => t('Quantity'),
+        'table_orientation' => t('Orientation'),
       ),
     ),
   );
@@ -282,6 +286,15 @@ function commerce_price_table_field_formatter_settings_form($field, $instance, $
       '#title' => t('Quantity label for the price table'),
       '#default_value' => isset($settings['quantity_label']) ? $settings['quantity_label'] : t('Quantity'),
     );
+    $element['table_orientation'] = array(
+      '#type' => 'radios',
+      '#options' => array(
+        COMMERCE_PRICE_TABLE_HORIZONTAL => t('Horizontal'),
+        COMMERCE_PRICE_TABLE_VERTICAL => t('Vertical'),
+      ),
+      '#title' => t('Orientation of the price table'),
+      '#default_value' => isset($settings['table_orientation']) ? $settings['table_orientation'] : COMMERCE_PRICE_TABLE_HORIZONTAL,
+    );
   }
 
   return $element;
@@ -297,9 +310,11 @@ function commerce_price_table_field_formatter_settings_summary($field, $instance
   $summary = array();
 
   if ($display['type'] == 'commerce_multiprice_default') {
+    $orientation = isset($settings['table_orientation']) && $settings['table_orientation'] == COMMERCE_PRICE_TABLE_VERTICAL ? t('Vertical') : t('Horizontal');
     $summary = array(
       t('Quantity label: !quantity_label', array('!quantity_label' => isset($settings['quantity_label']) ? $settings['quantity_label'] : t('Quantity'))),
       t('Price label: !price_label', array('!price_label' => isset($settings['price_label']) ? $settings['price_label'] : t('Price'))),
+      t('Orientation: !orientation', array('!orientation' => $orientation)),
     );
   }
 
@@ -411,8 +426,24 @@ function commerce_price_table_field_formatter_view($entity_type, $entity, $field
         }
       }
     }
+
+    // By default, the price table is rendered horizontally. If vertical
+    // orientation was choosen, flip the table.
+    if (isset($display['settings']['table_orientation']) && $display['settings']['table_orientation'] == COMMERCE_PRICE_TABLE_VERTICAL) {
+      $rows = array();
+      $header_old = $header;
+
+      $header = array($header_old[0], $row[0]);
+      for ($index = 1; $index < count($row); $index++) {
+        $rows[] = array('data' => array($header_old[$index], $row[$index]['data']));
+      }
+    }
+    else {
+      $rows = array($row);
+    }
+
     $element[] = array(
-      '#markup' => theme('table', array('header' => $header, 'rows' => array($row))),
+      '#markup' => theme('table', array('header' => $header, 'rows' => $rows)),
     );
   }
 
