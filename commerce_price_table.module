@@ -178,7 +178,9 @@ function commerce_price_table_field_load($entity_type, $entities, $field, $insta
     foreach ($items[$id] as $delta => $item) {
       // Unserialize the data array if necessary.
       if (!empty($items[$id][$delta]['data'])) {
-        $items[$id][$delta]['data'] = unserialize($items[$id][$delta]['data']);
+        if (is_string($items[$id][$delta]['data'])) {
+          $items[$id][$delta]['data'] = unserialize($items[$id][$delta]['data']);
+        }
       }
       else {
         $items[$id][$delta]['data'] = array('components' => array());
@@ -551,7 +553,7 @@ function commerce_price_table_entity_view_alter(&$build, $type) {
 }
 
 /**
- * Helper function that takes care of the quantity displayed in the headers of 
+ * Helper function that takes care of the quantity displayed in the headers of
  * the price table.
  */
 function commerce_price_table_display_quantity_headers($item) {
