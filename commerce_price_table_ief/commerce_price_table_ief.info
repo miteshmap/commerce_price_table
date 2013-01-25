@@ -1,0 +1,11 @@
+name = Commerce Price Table IEF support
+description = Provides support for Inline Entity Form
+package = Commerce (contrib)
+core = 7.x
+
+dependencies[] = commerce_product
+dependencies[] = commerce_price
+dependencies[] = commerce_price_table
+dependencies[] = inline_entity_form
+
+files[] = includes/commerce_price_table_ief_commerce_product.inline_entity_form.inc
