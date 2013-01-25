@@ -520,13 +520,12 @@ function commerce_price_table_get_field_instance_settings($entity_type = 'commer
  * Implements hook_form_FORM_ID_alter().
  */
 function commerce_price_table_form_commerce_product_ui_product_form_alter(&$form, &$form_state, $form_id) {
-  $access = TRUE;
   foreach (commerce_price_table_get_field_instance_settings($form['#entity_type'], $form['#bundle']) as $setting) {
     if (isset($setting['settings']['commerce_price_table']['hide_default_price']) && $setting['settings']['commerce_price_table']['hide_default_price'] == TRUE) {
-      $access = FALSE;
+      $form['commerce_price']['#access'] = FALSE;
+      break;
     }
   }
-  $form['commerce_price']['#access'] = $access;
 }
 
 /**
