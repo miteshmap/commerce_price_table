@@ -20,9 +20,18 @@ function commerce_price_table_default_rules_configuration() {
 
   $rule
     ->event('commerce_product_calculate_sell_price')
+    ->condition('entity_has_field', array(
+      'entity:select' => 'commerce-line-item',
+      'field' => 'commerce_product',
+    ))
+    ->condition('entity_has_field', array(
+      'entity:select' => 'commerce-line-item:commerce-product',
+      'field' => 'field_price_table',
+    ))
     ->action('commerce_price_table_set_price', array(
       'commerce_line_item:select' => 'commerce-line-item',
       'quantity:select' => 'commerce-line-item:quantity',
+      'price_table:select' => 'commerce-line-item:commerce-product:field-price-table',
     ));
 
   $rule->weight = -10;

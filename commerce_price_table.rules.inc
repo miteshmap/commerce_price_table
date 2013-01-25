@@ -17,6 +17,10 @@ function commerce_price_table_rules_action_info() {
         'label' => t('Quantity'),
         'type' => 'decimal',
       ),
+      'price_table' => array(
+        'label' => t('Price table'),
+        'type' => 'list<commerce_price_table>',
+      ),
     ),
     'group' => t('Commerce price table'),
   );
@@ -24,13 +28,13 @@ function commerce_price_table_rules_action_info() {
   return $actions;
 }
 
-function commerce_price_table_set_price($line_item, $quantity) {
+function commerce_price_table_set_price($line_item, $quantity, $price_table) {
   // If the line item contains a product, we set the price according to the
   // quantity.
   if (commerce_line_items_quantity(array($line_item), commerce_product_line_item_types())) {
     $line_item_wrapper = entity_metadata_wrapper('commerce_line_item', $line_item);
     $product = commerce_product_load($line_item_wrapper->commerce_product->product_id->value());
-    $item = commerce_price_table_get_amount_qty($product, $quantity);
+    $item = commerce_price_table_get_amount_qty($product, $quantity, $price_table);
     if (!empty($item)) {
       // Empty the price components to recalculate them.
       $line_item->commerce_unit_price[LANGUAGE_NONE][0]['data']['components'] = array();
