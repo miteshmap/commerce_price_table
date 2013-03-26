@@ -51,8 +51,8 @@ function commerce_price_table_set_price($line_item, $quantity, $price_table) {
               $price,
               TRUE
       );
-
       $line_item_wrapper->commerce_unit_price->amount = $item['amount'];
+      $line_item_wrapper->commerce_unit_price->currency_code = $item['currency_code'];
     }
   }
 }
