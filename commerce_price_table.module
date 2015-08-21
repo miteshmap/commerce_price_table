@@ -193,17 +193,37 @@ function commerce_price_table_field_load($entity_type, $entities, $field, $insta
 function commerce_price_table_field_validate($entity_type, $entity, $field, $instance, $langcode, &$items, &$errors) {
   // Ensure only numeric values are entered in price fields.
   foreach ($items as $delta => $item) {
+    // If the current item's price is not set, skip validating its row.
+    if (!isset($item['amount']) || $item['amount'] == '') {
+      continue;
+    }
+
     if (!empty($item['amount']) && !is_numeric($item['amount'])) {
       $errors[$field['field_name']][$langcode][$delta][] = array(
         'error' => 'price_numeric',
-        'message' => t('%name: you must enter a numeric value for the price.', array('%name' => check_plain($instance['label']))),
+        'message' => t('%name: you must enter a numeric value for the price.', array('%name' => $instance['label'])),
+      );
+    }
+
+    // Ensure the quantity fields are valid values.
+    if (!isset($item['min_qty']) || $item['min_qty'] == '' || !ctype_digit($item['min_qty']) || $item['min_qty'] < 1) {
+      $errors[$field['field_name']][$langcode][$delta][] = array(
+        'error' => 'price_table_min_qty',
+        'message' => t('%name: Minimum quantity values must be integers greater than 0.', array('%name' => $instance['label'])),
+      );
+    }
+
+    if (!isset($item['max_qty']) || $item['max_qty'] == '' || (!ctype_digit($item['max_qty']) && $item['max_qty'] <> -1) || $item['max_qty'] < -1 || $item['max_qty'] == 0) {
+      $errors[$field['field_name']][$langcode][$delta][] = array(
+        'error' => 'price_table_max_qty',
+        'message' => t('%name: Maximum quantity values must be integers greater than 0 or -1 for unlimited.', array('%name' => $instance['label'])),
       );
     }
 
     if ($item['max_qty'] < $item['min_qty'] && $item['max_qty'] <> -1) {
       $errors[$field['field_name']][$langcode][$delta][] = array(
-        'error' => 'price_table_quantity',
-        'message' => t('%name: Max quantity needs to be higher than min quantity.', array('%name' => check_plain($instance['label']))),
+        'error' => 'price_table_max_qty',
+        'message' => t('%name: Maximum quantity values must be higher than their related minimum quantity values.', array('%name' => $instance['label'])),
       );
     }
 
@@ -217,8 +237,13 @@ function commerce_price_table_field_validate($entity_type, $entity, $field, $ins
 function commerce_price_table_field_widget_error($element, $error, $form, &$form_state) {
   switch ($error['error']) {
     case 'price_numeric':
-    case 'price_table_quantity':
-      form_error($element, $error['message']);
+      form_error($element['amount'], $error['message']);
+      break;
+    case 'price_table_min_qty':
+      form_error($element['min_qty'], $error['message']);
+      break;
+    case 'price_table_max_qty':
+      form_error($element['max_qty'], $error['message']);
       break;
   }
 }
@@ -227,7 +252,7 @@ function commerce_price_table_field_widget_error($element, $error, $form, &$form
  * Implementation of hook_field_is_empty().
  */
 function commerce_price_table_field_is_empty($item, $field) {
-  return!isset($item['amount']) || (string) $item['amount'] == '';
+  return !isset($item['amount']) || (string) $item['amount'] == '';
 }
 
 /**
