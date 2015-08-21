@@ -32,6 +32,7 @@ function commerce_price_table_default_rules_configuration() {
       'commerce_line_item:select' => 'commerce-line-item',
       'quantity:select' => 'commerce-line-item:quantity',
       'price_table:select' => 'commerce-line-item:commerce-product:field-price-table',
+      'component_name' => 'base_price',
     ));
 
   $rule->weight = -10;
