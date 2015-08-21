@@ -96,8 +96,7 @@ function commerce_price_table_field_widget_form(&$form, &$form_state, $field, $i
   if ($instance['widget']['type'] == 'commerce_price_table_multiple') {
     $element['amount'] = array(
       '#type' => 'textfield',
-      '#title' => $element['#title'],
-      '#description' => t('Amount for the price.'),
+      '#title' => t('Price'),
       '#default_value' => $default_amount,
       '#size' => 10,
       '#field_suffix' => $default_currency['code'],
@@ -108,15 +107,14 @@ function commerce_price_table_field_widget_form(&$form, &$form_state, $field, $i
     );
     $element['min_qty'] = array(
       '#type' => 'textfield',
-      '#title' => t('Min Qty'),
-      '#description' => t('Minimum quantity for the price range.'),
+      '#title' => t('Minimum quantity'),
       '#default_value' => isset($items[$delta]['min_qty']) ? $items[$delta]['min_qty'] : 0,
       '#size' => 10,
     );
     $element['max_qty'] = array(
       '#type' => 'textfield',
-      '#title' => t('Max Qty'),
-      '#description' => t('Maximum quantity for the price range. Use "-1" for unlimited quantity.'),
+      '#title' => t('Maximum quantity'),
+      '#description' => t('Use -1 for no upper limit.'),
       '#default_value' => isset($items[$delta]['max_qty']) ? $items[$delta]['max_qty'] : 0,
       '#size' => 10,
     );
