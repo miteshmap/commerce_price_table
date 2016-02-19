@@ -29,7 +29,25 @@ function commerce_price_table_rules_action_info() {
         'default value' => 'base_price',
       ),
     ),
-    'group' => t('Commerce price table'),
+    'group' => t('Commerce Price Table'),
+  );
+
+  $actions['commerce_price_table_sum_quantities'] = array(
+    'label' => t('Sum quantities for products sharing a display'),
+    'parameter' => array(
+      'commerce_line_item' => array(
+        'type' => 'commerce_line_item',
+        'label' => t('Line item'),
+        'wrapped' => TRUE,
+      ),
+    ),
+    'provides' => array(
+      'combined_product_sum' => array(
+        'label' => t('Combined product sum'),
+        'type' => 'decimal',
+      ),
+    ),
+    'group' => t('Commerce Price Table'),
   );
 
   return $actions;
@@ -95,4 +113,41 @@ function commerce_price_table_set_price($line_item, $quantity, $price_table, $co
       );
     }
   }
+}
+
+/**
+ * Rules callback: provides a combined product sum variable in a rule based on
+ * all line items sharing the same product display as the given one.
+ */
+function commerce_price_table_sum_quantities($line_item_wrapper) {
+  $sum = 0;
+
+  // Loop over all line items on the order...
+  foreach ($line_item_wrapper->order->commerce_line_items as $delta => $target_line_item_wrapper) {
+    // If the current target line item is the same as the original one, include
+    // its quantity in the sum.
+    if ($line_item_wrapper->line_item_id->value() == $target_line_item_wrapper->line_item_id->value()) {
+      $sum += $target_line_item_wrapper->quantity->value();
+      continue;
+    }
+
+    // If the current target line item shares the same display context as the
+    // original one, include its quantity in the sum.
+    $source_data = $line_item_wrapper->value()->data['context'];
+    $target_data = $target_line_item_wrapper->value()->data['context'];
+
+    if ($source_data['product_ids'] == $target_data['product_ids']) {
+      // Include special checking for product IDs derived from reference fields.
+      if ($source_data['product_ids'] == 'entity') {
+        if ($source_data['entity'] == $target_data['entity']) {
+          $sum += $target_line_item_wrapper->quantity->value();
+        }
+      }
+      else {
+        $sum += $target_line_item_wrapper->quantity->value();
+      }
+    }
+  }
+
+  return array('combined_product_sum' => $sum);
 }
