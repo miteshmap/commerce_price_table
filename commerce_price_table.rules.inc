@@ -122,24 +122,34 @@ function commerce_price_table_set_price($line_item, $quantity, $price_table, $co
 function commerce_price_table_sum_quantities($line_item_wrapper) {
   $sum = 0;
 
+  // If the line item does not have an ID, it is being used to calculate a price
+  // on a product display. Return its quantity.
+  if (empty($line_item_wrapper->value()->line_item_id)) {
+    return $line_item_wrapper->quantity->value();
+  }
+
   // Loop over all line items on the order...
   foreach ($line_item_wrapper->order->commerce_line_items as $delta => $target_line_item_wrapper) {
-    // If the current target line item is the same as the original one, include
-    // its quantity in the sum.
-    if ($line_item_wrapper->line_item_id->value() == $target_line_item_wrapper->line_item_id->value()) {
+    // If the current target line item references the same product as the
+    // original one, include its quantity in the sum.
+    if ($line_item_wrapper->commerce_product->raw() == $target_line_item_wrapper->commerce_product->raw()) {
       $sum += $target_line_item_wrapper->quantity->value();
       continue;
     }
 
     // If the current target line item shares the same display context as the
     // original one, include its quantity in the sum.
-    $source_data = $line_item_wrapper->value()->data['context'];
-    $target_data = $target_line_item_wrapper->value()->data['context'];
+    $source_data = $line_item_wrapper->value()->data;
+    $target_data = $target_line_item_wrapper->value()->data;
 
-    if ($source_data['product_ids'] == $target_data['product_ids']) {
+    if (empty($source_data['context']) || empty($target_data['context'])) {
+      continue;
+    }
+
+    if ($source_data['context']['product_ids'] == $target_data['context']['product_ids']) {
       // Include special checking for product IDs derived from reference fields.
-      if ($source_data['product_ids'] == 'entity') {
-        if ($source_data['entity'] == $target_data['entity']) {
+      if ($source_data['context']['product_ids'] == 'entity') {
+        if ($source_data['context']['entity'] == $target_data['context']['entity']) {
           $sum += $target_line_item_wrapper->quantity->value();
         }
       }
