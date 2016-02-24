@@ -125,7 +125,7 @@ function commerce_price_table_sum_quantities($line_item_wrapper) {
   // If the line item does not have an ID, it is being used to calculate a price
   // on a product display. Return its quantity.
   if (empty($line_item_wrapper->value()->line_item_id)) {
-    return $line_item_wrapper->quantity->value();
+    return array('combined_product_sum' => $line_item_wrapper->quantity->value());
   }
 
   // Loop over all line items on the order...
