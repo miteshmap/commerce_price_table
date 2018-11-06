@@ -11,8 +11,6 @@ Install and configure
      unlimited or a fixed set of values.
   3. Add/edit your products and add them as many prices as you want and the
      quantity ranges. Use -1 for "Unlimited".
-  4. You can hide the original price checking the setting "Hide default price"
-     in the field settings.
 
 Recommended: Enable the quantity field for the add to cart display formatter in
 the product display settings.
