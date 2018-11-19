@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_price_table\Plugin\Field\FieldWidget;
 
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 
 /**
  * Plugin implementation of the 'commerce_price_table' widget.
@@ -27,35 +27,35 @@ class PriceTableDefaultWidget extends WidgetBase {
     $currency_codes = array_keys($currencies);
     $default_currency_code = $this->getFieldSetting('currency_code');
     $element['#attributes']['class'][] = 'form-type-commerce-price';
-    $element['amount'] = array(
+    $element['amount'] = [
       '#type' => 'textfield',
-      '#title' => t('Price'),
+      '#title' => $this->t('Price'),
       '#default_value' => isset($items[$delta]->amount) ? $items[$delta]->amount : '',
       '#size' => 10,
       '#prefix' => '<div class="form-type-commerce-price-table">',
       '#suffix' => '</div>',
-    );
+    ];
     $element['currency_code'] = [
       '#type' => 'select',
-      '#title' => t('Currency'),
+      '#title' => $this->t('Currency'),
       '#default_value' => $items[$delta]->currency_code ? $items[$delta]->currency_code : $default_currency_code,
       '#options' => array_combine($currency_codes, $currency_codes),
     ];
-    $element['min_qty'] = array(
+    $element['min_qty'] = [
       '#type' => 'textfield',
-      '#title' => t('Minimum quantity'),
+      '#title' => $this->t('Minimum quantity'),
       '#default_value' => isset($items[$delta]->min_qty) ? $items[$delta]->min_qty : '',
       '#size' => 10,
       '#prefix' => '<div class="clear-commerce-price-table">',
       '#suffix' => '</div>'
-    );
-    $element['max_qty'] = array(
+    ];
+    $element['max_qty'] = [
       '#type' => 'textfield',
-      '#title' => t('Maximum quantity'),
-      '#description' => t('Use -1 for no upper limit.'),
+      '#title' => $this->t('Maximum quantity'),
+      '#description' => $this->t('Use -1 for no upper limit.'),
       '#default_value' => isset($items[$delta]->max_qty) ? $items[$delta]->max_qty : '',
       '#size' => 10,
-    );
+    ];
     $element['#attached']['library'][] = 'commerce_price_table/admin';
     $element['#element_validate'][] = [get_class($this), 'validateElement'];
     return $element;

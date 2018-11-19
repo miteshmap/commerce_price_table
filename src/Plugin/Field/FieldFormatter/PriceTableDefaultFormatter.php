@@ -2,9 +2,9 @@
 
 namespace Drupal\commerce_price_table\Plugin\Field\FieldFormatter;
 
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\FieldDefinitionInterface;
-use Drupal\Core\Form\FormStateInterface;
 use CommerceGuys\Intl\Formatter\CurrencyFormatterInterface;
 use Drupal\commerce_price\Plugin\Field\FieldFormatter\PriceDefaultFormatter;
 
@@ -21,8 +21,11 @@ use Drupal\commerce_price\Plugin\Field\FieldFormatter\PriceDefaultFormatter;
  */
 class PriceTableDefaultFormatter extends PriceDefaultFormatter {
 
-  const COMMERCE_PRICE_TABLE_HORIZONTAL = 0;
-  const COMMERCE_PRICE_TABLE_VERTICAL = 1;
+  /**
+   * Price table display orientation constants.
+   */
+  const HORIZONTAL_MODE = 0;
+  const VERTICAL_MODE = 1;
 
   /**
    * The currency formatter.
@@ -31,6 +34,26 @@ class PriceTableDefaultFormatter extends PriceDefaultFormatter {
    */
   protected $currencyFormatter;
 
+  /**
+   * Constructs a new PriceTableDefaultFormatter object.
+   *
+   * @param string $plugin_id
+   *   The plugin_id for the formatter.
+   * @param mixed $plugin_definition
+   *   The plugin implementation definition.
+   * @param \Drupal\Core\Field\FieldDefinitionInterface $field_definition
+   *   The definition of the field to which the formatter is associated.
+   * @param array $settings
+   *   The formatter settings.
+   * @param string $label
+   *   The formatter label display setting.
+   * @param string $view_mode
+   *   The view mode.
+   * @param array $third_party_settings
+   *   Any third party settings.
+   * @param \CommerceGuys\Intl\Formatter\CurrencyFormatterInterface $currency_formatter
+   *   The currency formatter.
+   */
   public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, $label, $view_mode, array $third_party_settings, CurrencyFormatterInterface $currency_formatter) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $label, $view_mode, $third_party_settings, $currency_formatter);
 
@@ -42,7 +65,7 @@ class PriceTableDefaultFormatter extends PriceDefaultFormatter {
    */
   public static function defaultSettings() {
     return [
-      'table_orientation' => PriceTableDefaultFormatter::COMMERCE_PRICE_TABLE_HORIZONTAL,
+      'table_orientation' => PriceTableDefaultFormatter::HORIZONTAL_MODE,
     ] + parent::defaultSettings();
   }
 
@@ -50,9 +73,7 @@ class PriceTableDefaultFormatter extends PriceDefaultFormatter {
    * {@inheritdoc}
    */
   public function settingsForm(array $form, FormStateInterface $form_state) {
-
-    $table_orientation = $this->getSetting('table_orientation');
-    $res =  [
+    $settings = [
       'price_label' => [
         '#type' => 'textfield',
         '#title' => $this->t('Price label for the price table'),
@@ -65,33 +86,33 @@ class PriceTableDefaultFormatter extends PriceDefaultFormatter {
       ],
       'table_orientation' => [
         '#type' => 'radios',
-        '#options' => [
-          PriceTableDefaultFormatter::COMMERCE_PRICE_TABLE_HORIZONTAL => $this->t('Horizontal'),
-          PriceTableDefaultFormatter::COMMERCE_PRICE_TABLE_VERTICAL => $this->t('Vertical'),
-        ],
+        '#options' => $this->getOrientationOptionsList(),
         '#title' => $this->t('Orientation of the price table'),
-        '#default_value' => $table_orientation,
+        '#default_value' => $this->getSetting('table_orientation'),
       ],
 
     ] + parent::settingsForm($form, $form_state);
 
-    return $res;
-
+    return $settings;
   }
 
   /**
    * {@inheritdoc}
    */
   public function settingsSummary() {
-    $summary = [];
-    $table_orientation = $this->getSetting('table_orientation');
     $quantity_label = $this->getSetting('quantity_label');
     $price_label = $this->getSetting('price_label');
-    $orientation = isset($table_orientation) && $table_orientation == PriceTableDefaultFormatter::COMMERCE_PRICE_TABLE_VERTICAL ? $this->t('Vertical') : $this->t('Horizontal');
+
     $summary = [
-        $this->t('Quantity label: @quantity_label', array('@quantity_label' => isset($quantity_label) ? $quantity_label : $this->t('Quantity'))),
-        $this->t('Price label: @price_label', array('@price_label' => isset($price_label) ? $price_label : $this->t('Price'))),
-        $this->t('Orientation: @orientation', array('@orientation' => $orientation)),
+        $this->t('Quantity label: @label', [
+          '@label' => (!empty($quantity_label) ? $quantity_label : $this->t('Quantity')),
+        ]),
+        $this->t('Price label: @label', [
+          '@label' => (!empty($price_label) ? $price_label : $this->t('Price')),
+        ]),
+        $this->t('Orientation: @label', [
+          '@label' => $this->getOrientationLabel($this->getSetting('table_orientation')),
+        ]),
     ]  + parent::settingsSummary();
 
     return $summary;
@@ -101,24 +122,25 @@ class PriceTableDefaultFormatter extends PriceDefaultFormatter {
    * {@inheritdoc}
    */
   public function viewElements(FieldItemListInterface $items, $langcode) {
-
-    $options = $this->getFormattingOptions();
-    $table_orientation = $this->getSetting('table_orientation');
-    $elements = [];
     $header = [];
+    $elements = [];
+    $options = $this->getFormattingOptions();
+
     foreach ($items as $delta => $item) {
       if (isset($item->min_qty) && $item->max_qty && $item->amount) {
         $header[] = $this->getQuantityHeaders($item);
-        $row[] = array('data' => $this->currencyFormatter->format($item->amount, $item->currency_code, $options));
+        $row[] = [
+          'data' => $this->currencyFormatter->format($item->amount, $item->currency_code, $options),
+        ];
       }
     }
 
-    if (isset($table_orientation) && $table_orientation == PriceTableDefaultFormatter::COMMERCE_PRICE_TABLE_VERTICAL) {
-      $header_old = $header;
+    if ($this->getSetting('table_orientation') == PriceTableDefaultFormatter::VERTICAL_MODE) {
       $rows = [];
-      $header = array($header_old[0], $row[0]);
+      $header_old = $header;
+      $header = [$header_old[0], $row[0]];
       for ($index = 1; $index < count($row); $index++) {
-        $rows[] = array('data' => array($header_old[$index], $row[$index]['data']));
+        $rows[] = ['data' => [$header_old[$index], $row[$index]['data']]];
       }
     }
     else {
@@ -157,7 +179,7 @@ class PriceTableDefaultFormatter extends PriceDefaultFormatter {
    */
   protected function getQuantityHeaders($item) {
     // Set the quantity text to unlimited if it's -1. $item->min_qty
-    $max_qty = $item->max_qty == -1 ? t('Unlimited') : $item->max_qty;
+    $max_qty = $item->max_qty == -1 ? $this->t('Unlimited') : $item->max_qty;
     // If max and min qtys are the same, only show one.
     if ($item->min_qty == $max_qty) {
       $quantity_text = $item->min_qty ;
@@ -166,5 +188,35 @@ class PriceTableDefaultFormatter extends PriceDefaultFormatter {
       $quantity_text = $item->min_qty  . ' - ' . $max_qty;
     }
     return $quantity_text;
+  }
+
+  /**
+   * Return list with available orientation options.
+   *
+   * @return array
+   */
+  protected function getOrientationOptionsList() {
+    return [
+      PriceTableDefaultFormatter::HORIZONTAL_MODE => $this->t('Horizontal'),
+      PriceTableDefaultFormatter::VERTICAL_MODE => $this->t('Vertical'),
+    ];
+  }
+
+  /**
+   * Return orientation mode label.
+   *
+   * @param int $orientation_id
+   *   ID of orientation mode.
+   *
+   * @return string
+   */
+  protected function getOrientationLabel($orientation_id) {
+    $orientation_options = $this->getOrientationOptionsList();
+    if (array_key_exists($orientation_id, $orientation_options)) {
+      return $orientation_options[$orientation_id];
+    }
+
+    // If no match found, then return default orientation label.
+    return $orientation_options[PriceTableDefaultFormatter::HORIZONTAL_MODE];
   }
 }

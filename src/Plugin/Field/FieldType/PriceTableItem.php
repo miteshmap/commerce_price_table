@@ -2,11 +2,10 @@
 
 namespace Drupal\commerce_price_table\Plugin\Field\FieldType;
 
-
 use Drupal\Core\Field\FieldItemBase;
-use Drupal\Core\Field\FieldStorageDefinitionInterface;
-use Drupal\Core\TypedData\DataDefinition;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\TypedData\DataDefinition;
+use Drupal\Core\Field\FieldStorageDefinitionInterface;
 
 /**
  * Plugin implementation of the 'commerce_price_table' field type.
@@ -26,44 +25,44 @@ class PriceTableItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function schema(FieldStorageDefinitionInterface $field) {
-    return array(
-      'columns' => array(
-        'amount' => array(
+    return [
+      'columns' => [
+        'amount' => [
           'description' => 'The price amount.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
-        ),
-        'currency_code' => array(
+        ],
+        'currency_code' => [
           'description' => 'The currency code for the price.',
           'type' => 'varchar',
           'length' => 32,
           'not null' => TRUE,
-        ),
-        'min_qty' => array(
+        ],
+        'min_qty' => [
           'description' => 'The minimal quantity for this amount.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
-        ),
-        'max_qty' => array(
+        ],
+        'max_qty' => [
           'description' => 'The maximum quantity for this amount.',
           'type' => 'int',
           'not null' => TRUE,
           'default' => 0,
-        ),
-        'data' => array(
+        ],
+        'data' => [
           'description' => 'A serialized array of additional price data.',
           'type' => 'text',
           'size' => 'big',
           'not null' => FALSE,
           'serialize' => TRUE,
-        ),
-      ),
-      'indexes' => array(
-        'currency_price_table' => array('amount', 'currency_code'),
-      ),
-    );
+        ],
+      ],
+      'indexes' => [
+        'currency_price_table' => ['amount', 'currency_code'],
+      ],
+    ];
   }
 
   /**
@@ -73,12 +72,6 @@ class PriceTableItem extends FieldItemBase {
     $value = $this->get('amount')->getValue();
     return $value === NULL || $value === '';
   }
-
-
-  /**
-   * {@inheritdoc}
-   */
-  static $propertyDefinitions;
 
   /**
    * {@inheritdoc}
@@ -130,5 +123,4 @@ class PriceTableItem extends FieldItemBase {
 
     return $element;
   }
-
 }
