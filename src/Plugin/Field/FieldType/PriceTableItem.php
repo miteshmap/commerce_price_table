@@ -29,9 +29,9 @@ class PriceTableItem extends FieldItemBase {
       'columns' => [
         'amount' => [
           'description' => 'The price amount.',
-          'type' => 'int',
-          'not null' => TRUE,
-          'default' => 0,
+          'type' => 'numeric',
+          'precision' => 19,
+          'scale' => 6,
         ],
         'currency_code' => [
           'description' => 'The currency code for the price.',
@@ -77,7 +77,7 @@ class PriceTableItem extends FieldItemBase {
    * {@inheritdoc}
    */
   public static function propertyDefinitions(FieldStorageDefinitionInterface $field_definition) {
-    $properties['amount'] = DataDefinition::create('integer')
+    $properties['amount'] = DataDefinition::create('string')
       ->setLabel(t('The price amount.'));
 
     $properties['currency_code'] = DataDefinition::create('string')
