@@ -1,5 +1,5 @@
 {
-    "name": "drupal/commerce_price_table",
+    "name": "miteshmap/commerce_price_table",
     "type": "drupal-module",
     "description": "Price table field for Commerce.",
     "homepage": "https://www.drupal.org/project/commerce_price_table",
